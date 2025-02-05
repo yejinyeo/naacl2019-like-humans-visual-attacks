@@ -1,5 +1,5 @@
 # SAMPLE USAGE:
-# python3 image_generator.py < mychars.txt my_output
+# python3 image_generator.py < mychars.txt output_directory
 
 import os
 import sys
@@ -18,14 +18,36 @@ if len(sys.argv) != 2:
 output_root = sys.argv[1]  # 사용자 입력으로 받은 저장 디렉토리 이름
 output_dir = os.path.join(output_root, "images")  # 이미지 저장 경로
 missing_chars_file = os.path.join(output_root, "missing_chars.txt")  # 지원되지 않는 문자를 기록할 파일
+saving_chars_file = os.path.join(output_root, "saving_chars.txt")  # 지원된 문자를 기록할 파일
 
 # 결과 저장 디렉토리 생성
 os.makedirs(output_dir, exist_ok=True)
+
+# 초기화: 파일 비우기
+open(missing_chars_file, "w", encoding="utf-8").close()
+open(saving_chars_file, "w", encoding="utf-8").close()
 
 # 폰트 파일 불러오기
 font_files = [os.path.join(font_dir, f) for f in os.listdir(font_dir) if f.endswith((".ttf", ".otf"))]
 if not font_files:
     raise RuntimeError(f"No font files found in directory: {font_dir}")
+
+# 지원 여부 확인 함수
+def is_char_supported(font_path, char):
+    """
+    특정 font에서 문자가 지원되는지 확인
+    :param font_path: 폰트 경로
+    :param char: 확인할 문자
+    :return: 지원 여부 (True/False)
+    """
+    txt_path = f"{os.path.splitext(font_path)[0]}.txt"  # 폰트와 동일한 이름의 .txt 파일
+    if not os.path.exists(txt_path):
+        raise FileNotFoundError(f"Glyph file not found: {txt_path}")
+    
+    with open(txt_path, "r", encoding="utf-8") as file:
+        glyphs = file.read()
+    
+    return char in glyphs
 
 # 표준 입력에서 문자 읽기
 for line in sys.stdin:
@@ -36,34 +58,54 @@ for line in sys.stdin:
     codepoint = ord(unicode_text)
     print(f"Processing character: {unicode_text} (U+{codepoint:X})")
 
-    # 검정 배경의 새 이미지 생성
-    im = Image.new("RGB", (width, height), "black")
-    draw = ImageDraw.Draw(im)
-
-    # 폰트 지원 여부 확인 및 적용
-    font_supported = False
+    # 폰트 지원 여부 확인 및 선택
+    selected_font = None
     for font_path in font_files:
-        try:
-            unicode_font = ImageFont.truetype(font_path, font_size)
-            # 테스트로 문자를 폰트에 그려봄 (지원 여부 확인)
-            draw.text((2, 0), unicode_text, font=unicode_font, fill=font_color)
-            font_supported = True
-            break  # 지원 가능한 폰트를 찾으면 루프 종료
-        except Exception:
-            continue
+        if is_char_supported(font_path, unicode_text):
+            selected_font = font_path
+            break
 
     # 지원되지 않는 경우, missing_chars.txt에 기록
-    if not font_supported:
+    if not selected_font:
         with open(missing_chars_file, "a", encoding="utf-8") as missing_file:
             missing_file.write(f"{unicode_text};U+{codepoint:X}\n")
         print(f"Character not supported: {unicode_text} (U+{codepoint:X})")
         continue
 
-    # 이미지 저장
-    image_path = os.path.join(output_dir, f"text-other_{codepoint}.png")
-    im.save(image_path)
+    # 이미지 생성
+    im = Image.new("RGB", (width, height), "black")
+    draw = ImageDraw.Draw(im)
+    try:
+        unicode_font = ImageFont.truetype(selected_font, font_size)
+        draw.text((2, 0), unicode_text, font=unicode_font, fill=font_color)
 
-    print(f"Saved image: {image_path}")
+        # 이미지 저장
+        image_name = f"text-other_{codepoint:X}.png"
+        image_path = os.path.join(output_dir, image_name)
+        im.save(image_path)
+        print(f"Saved image: {image_path}")
 
+        # saving_chars.txt에 기록
+        with open(saving_chars_file, "a", encoding="utf-8") as saving_file:
+            saving_file.write(f"{unicode_text};U+{codepoint:X};{image_name}\n")
+
+    except Exception as e:
+        print(f"Error rendering {unicode_text} with {selected_font}: {e}")
+        with open(missing_chars_file, "a", encoding="utf-8") as missing_file:
+            missing_file.write(f"{unicode_text};U+{codepoint:X};Error: {str(e)}\n")
+
+# 총 문자 개수 계산
+def count_lines(file_path):
+    """파일의 줄 수를 계산"""
+    if not os.path.exists(file_path):
+        return 0
+    with open(file_path, "r", encoding="utf-8") as f:
+        return sum(1 for _ in f)
+
+missing_count = count_lines(missing_chars_file)
+saving_count = count_lines(saving_chars_file)
+
+# 결과 출력
 print(f"Images have been saved in '{output_dir}' directory.")
-print(f"Characters not supported are logged in '{missing_chars_file}'.")
+print(f"Characters not supported are logged in '{missing_chars_file}' ({missing_count} characters).")
+print(f"Characters supported and saved are logged in '{saving_chars_file}' ({saving_count} characters).")
