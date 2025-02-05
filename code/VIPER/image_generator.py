@@ -76,8 +76,24 @@ for line in sys.stdin:
     im = Image.new("RGB", (width, height), "black")
     draw = ImageDraw.Draw(im)
     try:
+        # 선택된 폰트 로드
         unicode_font = ImageFont.truetype(selected_font, font_size)
-        draw.text((2, 0), unicode_text, font=unicode_font, fill=font_color)
+
+        # 텍스트 크기 계산 (textbbox 사용)
+        bbox = draw.textbbox((0, 0), unicode_text, font=unicode_font)
+        text_width = bbox[2] - bbox[0]  # 텍스트의 폭
+        text_height = bbox[3] - bbox[1]  # 텍스트의 높이
+
+        # 폰트의 ascent와 descent 가져오기
+        ascent, descent = unicode_font.getmetrics()
+        total_height = text_height + descent  # 전체 높이 = 텍스트 높이 + 하단 여백
+
+        # 중앙 정렬을 위한 오프셋 계산
+        x_offset = (width - text_width) // 2
+        y_offset = (height - total_height) // 2
+
+        # 텍스트를 이미지 중앙에 배치
+        draw.text((x_offset, y_offset), unicode_text, font=unicode_font, fill=font_color)
 
         # 이미지 저장
         image_name = f"text-other_{codepoint:X}.png"
