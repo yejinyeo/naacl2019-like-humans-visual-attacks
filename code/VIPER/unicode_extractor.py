@@ -1,5 +1,5 @@
 # SAMPLE USAGE:
-# python3 extract_unicode_characters.py NamesList.txt mychars.txt
+# python3 unicode_extractor.py NamesList.txt mychars.txt
 
 import re
 import argparse
