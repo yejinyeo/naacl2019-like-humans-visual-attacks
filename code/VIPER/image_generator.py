@@ -68,7 +68,7 @@ for line in sys.stdin:
     # 지원되지 않는 경우, missing_chars.txt에 기록
     if not selected_font:
         with open(missing_chars_file, "a", encoding="utf-8") as missing_file:
-            missing_file.write(f"{unicode_text};U+{codepoint:X}\n")
+            missing_file.write(f"{unicode_text} U+{codepoint:X}\n")
         print(f"Character not supported: {unicode_text} (U+{codepoint:X})")
         continue
 
@@ -103,12 +103,12 @@ for line in sys.stdin:
 
         # saving_chars.txt에 기록
         with open(saving_chars_file, "a", encoding="utf-8") as saving_file:
-            saving_file.write(f"{unicode_text};U+{codepoint:X};{image_name}\n")
+            saving_file.write(f"{unicode_text} U+{codepoint:X} {image_name}\n")
 
     except Exception as e:
         print(f"Error rendering {unicode_text} with {selected_font}: {e}")
         with open(missing_chars_file, "a", encoding="utf-8") as missing_file:
-            missing_file.write(f"{unicode_text};U+{codepoint:X};Error: {str(e)}\n")
+            missing_file.write(f"{unicode_text} U+{codepoint:X} Error: {str(e)}\n")
 
 # 총 문자 개수 계산
 def count_lines(file_path):
