@@ -6,21 +6,27 @@ import numpy as np
 
 from perturbations_store import PerturbationsStorage
 
+from gensim.models import KeyedVectors as W2Vec
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', action="store", dest="embed")
 parser.add_argument("-p", action="store", dest="prob")
+parser.add_argument('-s', action="store", dest="seed", type=int, default=42)
 parser.add_argument('--perturbations-file', action="store", dest='perturbations_file')
 
 parsed_args = parser.parse_args(sys.argv[1:])
+
+seed = parsed_args.seed
+random.seed(seed)
+np.random.seed(seed)
 
 emb = parsed_args.embed
 prob = float(parsed_args.prob)
 perturbations_file = PerturbationsStorage(parsed_args.perturbations_file)
 
 # SAMPLE USAGE:
-# python3 viper_ices.py -e ../embeddings/efile.norm -p 0.4 
-
-from gensim.models import KeyedVectors as W2Vec
+# python3 viper_ices.py -e ../embeddings/efile.norm -p 0.4 -s 123 --perturbations-file dummy_store.txt < unsafe_raw_words.txt
 
 model = W2Vec.load_word2vec_format(emb)
 
