@@ -80,7 +80,7 @@ for line in sys.stdin:
         unicode_font = ImageFont.truetype(selected_font, font_size)
 
         # 텍스트 크기 계산 (textbbox 사용)
-        bbox = draw.textbbox((0, 0), unicode_text, font=unicode_font)
+        bbox = draw.textbbox((0, 0), unicode_text, font=unicode_font) # bbox = (left, top, right, bottom)
         text_width = bbox[2] - bbox[0]  # 텍스트의 폭
         text_height = bbox[3] - bbox[1]  # 텍스트의 높이
 
@@ -90,7 +90,7 @@ for line in sys.stdin:
 
         # 중앙 정렬을 위한 오프셋 계산
         x_offset = (width - text_width) // 2
-        y_offset = (height - total_height) // 2
+        y_offset = (height - text_height) // 2 - descent
 
         # 텍스트를 이미지 중앙에 배치
         draw.text((x_offset, y_offset), unicode_text, font=unicode_font, fill=font_color)
