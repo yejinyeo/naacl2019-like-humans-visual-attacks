@@ -90,7 +90,7 @@ for line in sys.stdin:
 
         # 중앙 정렬을 위한 오프셋 계산
         x_offset = (width - text_width) // 2
-        y_offset = (height - text_height) // 2 - descent
+        y_offset = (height - (ascent + descent)) // 2
 
         # 텍스트를 이미지 중앙에 배치
         draw.text((x_offset, y_offset), unicode_text, font=unicode_font, fill=font_color)
