@@ -11,18 +11,25 @@ from transformers import AutoImageProcessor, AutoModel
 # Hugging Face에서 DINOv2 ViT-B/14 모델 로드
 processor = AutoImageProcessor.from_pretrained("facebook/dinov2-base")
 model = AutoModel.from_pretrained("facebook/dinov2-base")
+
+# GPU 설정
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
+model.to(device)
 model.eval()  # 평가 모드
 
 def extract_embedding(image_path):
     """이미지를 DINOv2 ViT-B/14로 변환하여 embedding 추출"""
     image = Image.open(image_path).convert("RGB")  # RGB 변환
-    inputs = processor(images=image, return_tensors="pt")  # 모델 입력 변환
+    # 이미지 텐서를 GPU로 이동
+    inputs = processor(images=image, return_tensors="pt").to(device)
 
     with torch.no_grad():
         outputs = model(**inputs)  # DINOv2에서 feature 추출
         embedding = outputs.last_hidden_state.mean(dim=1)  # 평균 풀링 적용 (768-d vector)
     
-    return embedding.squeeze().numpy()  # NumPy 배열로 변환
+    return embedding.squeeze().cpu().numpy()  # NumPy 배열로 변환
 
 def generate_vectors(image_dir, saving_chars_file, output_file):
     """
