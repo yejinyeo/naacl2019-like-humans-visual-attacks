@@ -8,8 +8,8 @@ import os
 import sys
 from PIL import Image, ImageDraw, ImageFont
 
-width, height = 24, 24
-font_size = 22
+width, height = 56, 56
+font_size = int(width * 0.85)
 font_color = (255, 255, 255)  # 흰색 글자 (검정 배경에 대비)
 font_dir = "multilingual_mixed_fonts"  # 폰트 파일 경로
 
